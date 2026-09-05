@@ -1,0 +1,153 @@
+db                     # Add breakpoint at current offset
+dbl[jq]                # List all breakpoints
+dbH                    # Add hardware breakpoint at current offset
+db-                    # Remove breakpoint at current offset
+db-*                   # Remove all breakpoints
+db.                    # Show breakpoint info at current offset
+dbc <cmd>              # Set a command <cmd> to be run when the breakpoint at the current offset is hit
+dbC <cmd>              # Make the breakpoint at the current offset conditional, and hit only when <cmd> evaluates to 0
+dbd                    # Disable breakpoint at current offset
+dbe                    # Enable breakpoint at current offset
+dbs                    # Toggle breakpoint at current offset
+dbf                    # Put a breakpoint into every no-return function
+dbm <module> <offset>  # Add a breakpoint at an offset from a module's base
+dbn [<name>]           # Show name of current breakpoint / Set name for current breakpoint
+dbi[?]                 # Breakpoint index commands
+dbh                    # List archs which supports software breakpoints
+dbt[?]                 # Backtrace commands
+dbx [<expr>]           # View expression for all the breakpoints / Set expression for breakpoint at current offset
+dbw <perm> [<size>]    # Add watchpoint at current offset
+dbW <WM_DEFINE> [<handle/name>] # Set conditional breakpoint on a window message handler (only for Windows)
+dbi               # Show breakpoint index at current offset
+dbil              # List breakpoints indexes
+dbi- <idx>        # Remove breakpoint by index
+dbix <idx> <expr> # Set expression for breakpoint at given index
+dbic <idx> <cmd>  # Run a command at breakpoint index
+dbie <idx>        # Enable breakpoint by index
+dbid <idx>        # Disable breakpoint by index
+dbis <idx>        # Toggle breakpoint by index
+dbite <idx>       # Enable breakpoint trace by index
+dbitd <idx>       # Disable breakpoint trace by index
+dbits <idx>       # Toggle breakpoint trace by index
+dbt[jqt]     # Display backtrace based on dbg.btdepth and dbg.btalgo
+dbt= [<s/b>] # Display backtrace in one line (see dbt= s and dbt= b for sp or bp)
+dbtv         # Display backtrace with local vars if any
+dbta         # Display ascii-art representation of the stack backtrace
+dbte         # Enable breakpoint trace at current offset
+dbtd         # Disable breakpoint trace at current offset
+dbts         # Toggle breakpoint trace at current offset
+dc [<pid>]           # Continue execution of all children
+dcb                  # Continue back until breakpoint
+dcc                  # Continue until call (use step into)
+dcco                 # Continue until call (use step out)
+dccu                 # Continue until unknown call (call reg)
+dce                  # Continue execution (pass exception to program) (Windows only)
+dcf                  # Continue until fork
+dck <signal> [<pid>] # Continue sending signal to process
+dcp                  # Continue until program code (mapped io section)
+dcr                  # Continue until ret (uses step over)
+dcs [<syscall>]      # Continue until syscall
+dct [<len>]          # Traptrace from curseek to len, no argument to list
+dcu <address>=$$     # Debug continue until
+de <perm> <kind> <expression> # Add ESIL watchpoint
+de-*                    # Remove all ESIL watchpoints
+del[jt]                 # List all ESIL watchpoints
+dec                     # Continue execution until matching expression
+des <N>                 # Step-in <N> instructions with ESIL
+desu <<address>>        # Step until specified <address>
+ds <num>=1  # Step <num> instruction
+dsb <num>=1 # Step back <num> instruction
+dsf         # Step until end of frame
+dsi <cond>  # Continue until condition matches
+dsl <num>=1 # Step <num> source line
+dso <num>=1 # Step over <num> instructions
+dsp         # Step into program (skip libs)
+dss <num>=1 # Skip <num> step instructions
+dsu[ioef?]  # Debug step until commands
+dsu <addr>                   # Step until <addr>
+dsui <instr>                 # Step until an instruction that matches <instr>
+dsuir <regex>                # Step until an instruction that matches <regex>
+dsuo <optype1> <optype2> ... # Step until an instruction matches one of the <optype>s
+dsue <esil>                  # Step until <esil> expression matches
+dsuf <flag>                  # Step until pc == <flag> matching name
+dt                     # Get trace info at the current address
+dtl[q]                 # List all traces
+dtl=                   # List all traces in ascii art
+dt+ [<times>]          # Add trace for address N times
+dt++ <addrs1> <addrs2> ... # Add trace for some address
+dt-                    # Reset traces (instruction/calls)
+dtc [<from> [<to> [<addr>]]] # Trace call/ret
+dte[li?]               # Esil trace logs
+dtg[i]                 # Graph call/ret trace
+dts<+-tfm>             # Debug trace session commands
+dtt <tag>              # Select trace tag (no arg unsets)
+dte <idx> # Esil trace log for a single instruction for that index log
+dtel      # Esil trace log for a single instruction
+dte-*     # Delete all esil traces
+dtei      # Esil trace log for a single instruction
+dm[jqt]                 # List memory maps
+dm+ <size>              # Allocate <size> bytes at current offset
+dm=                     # List memory maps of current process with ASCII art bars
+dm.[?]                  # Show map name of current address
+dmm[j.]                 # Module memory map commands
+dm-                     # Deallocate memory map at current offset
+dmd[aw]                 # Dump debug map regions to a file (from-to.dmp)
+dmh<gwj>                # Heap commands
+dmi[jqQa.]              # List/Load symbols
+dml <file>              # Load contents of file into current map region
+dmp <perms> [<size>]    # Change page at current offset with <size>, protection <perms> / Change dbg.map permissions to <perms>
+dmL <size>              # Allocate <size> bytes at current offset and promote to huge page
+dmS[j] [<addribname> [<sectname>]] # List sections of target lib
+dp[jt] [<pid>]       # List current pid and children
+dpl[jt]              # List all attachable pids
+dpa [<pid>]          # Attach to selected <pid>
+dp- [<pid>]          # Detach from selected <pid>
+dp= <pid>            # Select <pid>
+dpc                  # Select forked pid (see dbg.forks)
+dpc*                 # Display forked pid (see dbg.forks)
+dpe [<pid>]          # Show path to executable
+dpf                  # Attach to pid like file fd
+dpk <pid> [<signal>] # Send <signal> to process <pid>
+dpT[jt] [<pid>]      # List threads of specified or current <pid>
+dpt= <thread-id>     # Select <thread-id>
+dr[jqt] [<filter1> [= <value>] <filter2> [= <value>] ...] # Show registers with their values, or assign registers (`dr reg1=value reg2=value`)
+dr= [<filter>]          # Show registers in columns
+drr[j] [<filter>]       # Show register references (telescoping)
+dri [<filter>]          # Show register grouped by their values
+drA[j]                  # Show values of default function argument registers (A0, A1, A2, ...) with telescoping
+drcc                    # Show calling convention defined by registers
+drd                     # Show register differences from previous contents
+dro[jqt] [<filter>]     # Show previous register contents
+drF [<register> [= <value>]] # Show fpu registers
+drf[-]                  # Show commands for setting registers as flags
+dra[?]                  # Register arena commands (underlying binary data)
+drp[jcog]               # Register profile commands (defining available registers)
+drc                     # Conditional flags (aliases to processor flags)
+drT                     # List all register types
+drR                     # List all register roles
+drx[-]                  # Show hardware breakpoint registers
+
+Register Filter:
+dr     # Show a sensible default selection of registers
+dr rax # Show a single register
+dr 16  # Show 16 bits wide gpr registers
+dr xmm # Show registers of type xmm (see `drT` for possible types)
+dr PC  # Show the register with the given role (see `drR` for possible roles)
+dr all # Show all registers available
+db[?]           # Breakpoints commands
+dc[?]           # Continue execution
+dd[-lsdrw]      # Debug file descriptors commands
+de[lcs?]        # Manage ESIL watchpoints
+dg [<filename>] # Generate core dump file
+do<rec>         # Debug (re)open commands
+ds[?]           # Debug step commands
+dt[?]           # Trace commands
+di[jq]          # Debug information
+dk[lnNo]        # Debug signals management
+dl[l]           # Debug handler
+dm[?]           # Memory map commands
+dp[?]           # List or attach to process or thread
+dr[?]           # CPU Registers
+dw [<pid>]      # Block prompt until <pid> dies
+dW[i]           # Windows process commands
+dx[aers]        # Code injection commands
