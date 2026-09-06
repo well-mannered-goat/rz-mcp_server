@@ -1,8 +1,7 @@
 {
     "os": "linux",
-    "distro": "ubuntu",
+    "distro": "debian",
     "arch": "x86_64",
-    "version": "10.0.0",
-    "kernel_version": "5.6.0-1",
-    "username": "root"
+    "version": "13.6.0",
+    "compiler": "gcc"
 }

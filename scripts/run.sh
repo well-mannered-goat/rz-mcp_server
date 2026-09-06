@@ -27,7 +27,5 @@ export PATH="${QEMU_PREFIX}/bin:$PATH"
 qemu-system-${ARCH} -L "${QEMU_PREFIX}/share/qemu" \
 	${QEMU_COMMON_ARGS} \
 	-drive file="${IMAGE}" \
-	-drive file=fat:rw:${QEMU_SHARE} \
 	-net user,hostfwd=tcp::${PORT}-:22 \
-    -display none
 	-daemonize

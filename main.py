@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 import time
+import socket
 from pathlib import Path
 
 PROFILE = {
@@ -11,7 +12,8 @@ PROFILE = {
     "arch": "x86_64",
     "version": "13.6.0",
     "kernel_version": "5.6.0-1",
-    "username": "root",
+    "username": "rizin",
+    "password": "rizin"
 }
 
 VM_PORT = 2222
@@ -23,6 +25,9 @@ VM_CONNECTION_INFO_PATH = Path("data/vm_connection.json")
 
 VM_READY_TIMEOUT_SECONDS = 120
 VM_READY_POLL_INTERVAL_SECONDS = 2
+
+MAX_TURNS = 40
+MAX_TOOL_REPETITIONS = 3
 
 
 def vm_image_path(profile: dict) -> Path:
@@ -65,7 +70,12 @@ def start_vm(profile: dict) -> bool:
 
 
 def get_vm_connection_info(profile: dict) -> dict:
-    return {"host": "localhost", "port": VM_PORT, "username": profile["username"]}
+    return {
+        "host": "localhost",
+        "port": VM_PORT,
+        "username": profile["username"],
+        "password": profile["password"],
+    }
 
 
 def wait_for_vm_ready(connection_info: dict) -> bool:
@@ -74,23 +84,12 @@ def wait_for_vm_ready(connection_info: dict) -> bool:
     port = connection_info["port"]
 
     while time.monotonic() < deadline:
-        probe = subprocess.run(
-            [
-                "ssh",
-                "-p", str(port),
-                "-o", "ConnectTimeout=3",
-                "-o", "StrictHostKeyChecking=no",
-                "-o", "BatchMode=yes",
-                f"{connection_info['username']}@{host}",
-                "true",
-            ],
-            check=False,
-            capture_output=True,
-        )
-        if probe.returncode == 0:
-            print(f"VM is reachable at {host}:{port}.")
-            return True
-        time.sleep(VM_READY_POLL_INTERVAL_SECONDS)
+        try:
+            with socket.create_connection((host, port), timeout=3):
+                print(f"VM is reachable at {host}:{port}.")
+                return True
+        except OSError:
+            time.sleep(VM_READY_POLL_INTERVAL_SECONDS)
 
     print(f"VM did not become reachable within {VM_READY_TIMEOUT_SECONDS}s.", file=sys.stderr)
     return False
@@ -107,7 +106,15 @@ def run_agent_investigation() -> int:
         print(f"Recipe not found at {RECIPE_PATH} -- create it before running this.", file=sys.stderr)
         return 1
 
-    result = subprocess.run(["goose", "run", "--recipe", str(RECIPE_PATH)], check=False)
+    result = subprocess.run(
+        [
+            "goose", "run",
+            "--recipe", str(RECIPE_PATH),
+            "--max-turns", str(MAX_TURNS),
+            "--max-tool-repetitions", str(MAX_TOOL_REPETITIONS),
+        ],
+        check=False,
+    )
     return result.returncode
 
 

@@ -8,6 +8,8 @@ mcp = FastMCP("debugger-triage")
 TEST_ID = 0
 VM_CONNECTION_INFO_PATH = Path("data/vm_connection.json")
 
+ALLOWED_SOURCE_ROOT = Path("rizin").resolve()
+
 
 def _connect_to_vm() -> paramiko.SSHClient:
     info = json.loads(VM_CONNECTION_INFO_PATH.read_text())
@@ -19,6 +21,7 @@ def _connect_to_vm() -> paramiko.SSHClient:
         hostname=info["host"],
         port=info["port"],
         username=info["username"],
+        password=info["password"],
     )
 
     return client
@@ -35,6 +38,18 @@ def _load_test(test_id: int) -> dict:
         raise FileNotFoundError(f"Test {test_id} does not exist")
 
     return json.loads(path.read_text())
+
+
+def _resolve_within_source(path: str) -> Path | None:
+    """Resolve `path` against ALLOWED_SOURCE_ROOT and refuse anything
+    that escapes it, no matter how it's spelled (absolute paths, ../,
+    symlinks). Returns None if the path is outside the allowed root."""
+    candidate = (ALLOWED_SOURCE_ROOT / path).resolve()
+
+    if candidate != ALLOWED_SOURCE_ROOT and ALLOWED_SOURCE_ROOT not in candidate.parents:
+        return None
+
+    return candidate
 
 
 @mcp.tool()
@@ -231,13 +246,16 @@ def run_test(test_id: int) -> str:
 
 @mcp.tool()
 def read_source_file(path: str, line_range: Optional[str] = None) -> str:
-    """Read Rizin source code from a local file, optionally restricted to a line range such as '120-150', so the agent can investigate command implementation errors."""
-    source_path = Path(path)
+    """Read Rizin source code from a file inside the Rizin source tree, optionally restricted to a line range such as '120-150', so the agent can investigate command implementation errors. Paths outside the Rizin source tree are rejected."""
+    resolved_path = _resolve_within_source(path)
 
-    if not source_path.is_file():
+    if resolved_path is None:
+        return f"Path '{path}' is outside the allowed Rizin source tree and cannot be read."
+
+    if not resolved_path.is_file():
         return f"Source file not found: {path}"
 
-    lines = source_path.read_text().splitlines()
+    lines = resolved_path.read_text().splitlines()
 
     if line_range is None:
         return "\n".join(lines)

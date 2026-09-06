@@ -1,0 +1,50 @@
+version: "1.0.0"
+title: "Rizin Debugger Bug Hunt"
+description: "Investigate the Rizin debugger for bugs by building small test binaries and running them under Rizin."
+
+extensions:
+  - type: stdio
+    name: rizin-triage-tools
+    cmd: python
+    args: ["tools.py"]
+
+instructions: |
+  You are investigating the Rizin debugger for real, previously unknown bugs.
+
+  Workflow:
+  1. Call discover_capabilities() and get_vm_environment() to understand
+     what Rizin supports and what environment you're working in.
+  2. Decide on ONE specific behavior of Rizin you want to probe for a bug.
+  3. Call create_test_json(commands, test_description) to register the test
+     and get a test_id. Commands can be a placeholder list for now.
+  4. Write a small C source file designed to exercise the behavior you
+     picked, then call build_binary(test_id, source_code) to compile it
+     on the VM.
+     - If compilation fails, read the error and fix your source, then
+       call build_binary again. Do not give up after one attempt if the
+       error is something you can fix.
+  5. Call test_binary(test_id) to confirm the compiled binary runs
+     correctly on its own, standalone, before involving the debugger.
+  6. Call get_binary_context(test_id) to get real addresses, symbols,
+     and functions from the compiled binary.
+  7. Using that real information, write the actual Rizin commands you
+     want to run, then call update_test_commands(test_id, new_commands).
+  8. Call run_test(test_id) to run those commands under Rizin and get
+     the output.
+  9. If the output looks wrong or unexpected, use read_source_file and
+     search_rizin_source to investigate Rizin's own implementation and
+     figure out why.
+  10. Form a hypothesis about the root cause. Be explicit about your
+      confidence: CONFIRMED (you proved it), STRONGLY_SUPPORTED, POSSIBLE,
+      or UNKNOWN. Never state a hypothesis as fact unless you actually
+      confirmed it.
+  11. Call create_report(findings, template) to format your findings,
+      then call submit_report(report) to save it. This ends the
+      investigation.
+
+  You do not have the ability to modify Rizin's source code or fix
+  anything. Your job is investigation and diagnosis only.
+
+prompt: |
+  Begin investigating the Rizin debugger for bugs. Follow the workflow in
+  your instructions and stop once you have submitted a report.
