@@ -6,13 +6,13 @@ import paramiko
 
 mcp = FastMCP("debugger-triage")
 TEST_ID = 0
-VM_CONNECTION_INFO_PATH = Path("data/vm_connection.json")
-
-ALLOWED_SOURCE_ROOT = Path("rizin").resolve()
+VM_CONNECTION_INFO_PATH = Path("../data/vm_connection.json")
+ALLOWED_SOURCE_ROOT = Path("~/rizin").resolve()
 
 
 def _connect_to_vm() -> paramiko.SSHClient:
     info = json.loads(VM_CONNECTION_INFO_PATH.read_text())
+    print(info)
 
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())

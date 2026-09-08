@@ -6,10 +6,11 @@ extensions:
   - type: stdio
     name: rizin-triage-tools
     cmd: python
-    args: ["tools.py"]
+    args: ["~/rz-mcp_server/mcp-server/tools.py"]
 
 instructions: |
   You are investigating the Rizin debugger for real, previously unknown bugs.
+  Before calling any tool, briefly state in one sentence what you are trying to do.
 
   Workflow:
   1. Call discover_capabilities() and get_vm_environment() to understand
@@ -40,7 +41,9 @@ instructions: |
       confirmed it.
   11. Call create_report(findings, template) to format your findings,
       then call submit_report(report) to save it. This ends the
-      investigation.
+      investigation. Do not create a very long report, it should reflect what
+      is being tried to achieve, the commands ran, the output, your hypothesis
+      and their possible causes. Thats it, no long converstations, be simple and direct.
 
   You do not have the ability to modify Rizin's source code or fix
   anything. Your job is investigation and diagnosis only.
