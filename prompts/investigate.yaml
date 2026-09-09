@@ -15,6 +15,7 @@ instructions: |
   Workflow:
   1. Call discover_capabilities() and get_vm_environment() to understand
      what Rizin supports and what environment you're working in.
+     Also confirm the basic command syntax from the discover_capabilities()
   2. Decide on ONE specific behavior of Rizin you want to probe for a bug.
   3. Call create_test_json(commands, test_description) to register the test
      and get a test_id. Commands can be a placeholder list for now.
@@ -23,7 +24,8 @@ instructions: |
      on the VM.
      - If compilation fails, read the error and fix your source, then
        call build_binary again. Do not give up after one attempt if the
-       error is something you can fix.
+       error is something you can fix. Do this a maximum of 3 times only,
+       If the error keeps persisting stop the investigation.
   5. Call test_binary(test_id) to confirm the compiled binary runs
      correctly on its own, standalone, before involving the debugger.
   6. Call get_binary_context(test_id) to get real addresses, symbols,
@@ -31,7 +33,8 @@ instructions: |
   7. Using that real information, write the actual Rizin commands you
      want to run, then call update_test_commands(test_id, new_commands).
   8. Call run_test(test_id) to run those commands under Rizin and get
-     the output.
+     the output. You dont have to explain each and every line of the output,
+     Add the output logs received in the report you will be creating.
   9. If the output looks wrong or unexpected, use read_source_file and
      search_rizin_source to investigate Rizin's own implementation and
      figure out why.

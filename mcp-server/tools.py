@@ -6,14 +6,21 @@ import paramiko
 
 mcp = FastMCP("debugger-triage")
 TEST_ID = 0
-VM_CONNECTION_INFO_PATH = Path("../data/vm_connection.json")
-ALLOWED_SOURCE_ROOT = Path("~/rizin").resolve()
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+
+VM_CONNECTION_INFO_PATH = PROJECT_ROOT / "data" / "vm_connection.json"
+TESTS_DIR = PROJECT_ROOT / "tests"
+CAPABILITIES_PATH = PROJECT_ROOT / "context" / "rizin-debugger-commands"
+VM_CONFIG_PATH = PROJECT_ROOT / "vm_config.json"
+REPORT_PATH = PROJECT_ROOT / "reports" / "report.md"
+ALLOWED_SOURCE_ROOT = Path("~/rizin").expanduser().resolve()
 
 
 def _connect_to_vm() -> paramiko.SSHClient:
     info = json.loads(VM_CONNECTION_INFO_PATH.read_text())
     print(info)
-
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -23,12 +30,12 @@ def _connect_to_vm() -> paramiko.SSHClient:
         username=info["username"],
         password=info["password"],
     )
-
+    
     return client
 
 
 def _test_record_path(test_id: int) -> Path:
-    return Path(f"tests/{test_id}.json")
+    return TESTS_DIR / f"{test_id}.json"
 
 
 def _load_test(test_id: int) -> dict:
@@ -55,10 +62,8 @@ def _resolve_within_source(path: str) -> Path | None:
 @mcp.tool()
 def discover_capabilities() -> str:
     """Return the Rizin debugger's documented command reference so the agent knows which debugger commands are available."""
-    capabilities_path = Path("context/rizin-debugger-commands")
-
-    if capabilities_path.exists():
-        return capabilities_path.read_text()
+    if CAPABILITIES_PATH.exists():
+        return CAPABILITIES_PATH.read_text()
 
     return """\
 db[?]           # Breakpoints commands
@@ -84,7 +89,7 @@ dx[aers]        # Code injection commands
 @mcp.tool()
 def get_vm_environment() -> str:
     """Return the VM's OS, architecture, compiler, and other environment information used to build and run the test."""
-    return Path("./vm_config.json").read_text()
+    return VM_CONFIG_PATH.read_text()
 
 
 @mcp.tool()
@@ -95,7 +100,7 @@ def create_test_json(commands: list[str], test_description: str) -> int:
     test_id = TEST_ID
     TEST_ID += 1
 
-    Path("tests").mkdir(parents=True, exist_ok=True)
+    TESTS_DIR.mkdir(parents=True, exist_ok=True)
 
     test = {
         "commands": commands,
@@ -297,34 +302,30 @@ def create_report(findings: str, template: str) -> str:
 @mcp.tool()
 def submit_report(report: str) -> str:
     """Save the final Markdown report to disk. This is the final tool in the test workflow."""
-    report_path = Path("reports/report.md")
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(report)
+    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    REPORT_PATH.write_text(report)
 
-    return f"Report saved to {report_path}"
+    return f"Report saved to {REPORT_PATH}"
+
 
 @mcp.tool()
 def get_rizin_source_path() -> str:
     """Return the local path to the Rizin source tree so the agent can inspect Rizin's implementation."""
-    source_path = Path("rizin")
+    if not ALLOWED_SOURCE_ROOT.is_dir():
+        return f"Rizin source directory not found: {ALLOWED_SOURCE_ROOT}"
 
-    if not source_path.is_dir():
-        return f"Rizin source directory not found: {source_path.resolve()}"
-
-    return str(source_path.resolve())
+    return str(ALLOWED_SOURCE_ROOT)
 
 
 @mcp.tool()
 def search_rizin_source(query: str) -> str:
     """Search the Rizin source tree for a command, function, error message, or other text and return matching files and lines."""
-    source_path = Path("rizin")
-
-    if not source_path.is_dir():
-        return f"Rizin source directory not found: {source_path.resolve()}"
+    if not ALLOWED_SOURCE_ROOT.is_dir():
+        return f"Rizin source directory not found: {ALLOWED_SOURCE_ROOT}"
 
     results = []
 
-    for path in source_path.rglob("*"):
+    for path in ALLOWED_SOURCE_ROOT.rglob("*"):
         if not path.is_file():
             continue
 
@@ -352,6 +353,7 @@ def search_rizin_source(query: str) -> str:
         return f"No matches found for: {query}"
 
     return "\n".join(results)
+
 
 if __name__ == "__main__":
     mcp.run()

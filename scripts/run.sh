@@ -28,4 +28,5 @@ qemu-system-${ARCH} -L "${QEMU_PREFIX}/share/qemu" \
 	${QEMU_COMMON_ARGS} \
 	-drive file="${IMAGE}" \
 	-net user,hostfwd=tcp::${PORT}-:22 \
+	-display none \
 	-daemonize
