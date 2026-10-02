@@ -66,26 +66,74 @@ def discover_capabilities() -> str:
         return CAPABILITIES_PATH.read_text()
 
     return """\
-db[?]           # Breakpoints commands
-dc[?]           # Continue execution
-dd[-lsdrw]      # Debug file descriptors commands
-de[lcs?]        # Manage ESIL watchpoints
-dg [<filename>] # Generate core dump file
-do<rec>         # Debug (re)open commands
-ds[?]           # Debug step commands
-dt[?]           # Trace commands
-di[jq]          # Debug information
-dk[lnNo]        # Debug signals management
-dl[l]           # Debug handler
-dm[?]           # Memory map commands
-dp[?]           # List or attach to process or thread
-dr[?]           # CPU Registers
-dw [<pid>]      # Block prompt until <pid> dies
-dW[i]           # Windows process commands
-dx[aers]        # Code injection commands
-"""
+        db[?]           # Breakpoints commands
+        dc[?]           # Continue execution
+        dd[-lsdrw]      # Debug file descriptors commands
+        de[lcs?]        # Manage ESIL watchpoints
+        dg [<filename>] # Generate core dump file
+        do<rec>         # Debug (re)open commands
+        ds[?]           # Debug step commands
+        dt[?]           # Trace commands
+        di[jq]          # Debug information
+        dk[lnNo]        # Debug signals management
+        dl[l]           # Debug handler
+        dm[?]           # Memory map commands
+        dp[?]           # List or attach to process or thread
+        dr[?]           # CPU Registers
+        dw [<pid>]      # Block prompt until <pid> dies
+        dW[i]           # Windows process commands
+        dx[aers]        # Code injection commands
+        """
 
+@mcp.tool()
+def get_existing_tests() -> str:
+    """
+    List and read existing Rizin debugger tests for the current VM's OS and architecture.
 
+    Returns the contents of all `dbg*` files under test/db/archos/<os>-<arch>/,
+    truncated to stay within context limits. Use this to understand the existing
+    test patterns and conventions before writing new tests.
+    """
+    MAX_CHARS_PER_FILE = 500
+    MAX_TOTAL_CHARS = 5000
+
+    try:
+        with open(VM_CONFIG_PATH, "r") as file:
+            vm_config = json.load(file)
+
+        os_env = vm_config["os"]
+        arch_env = vm_config["arch"]
+
+        if arch_env == "x86_64":
+            arch_env = "x64"
+
+        dbg_test_dir = ALLOWED_SOURCE_ROOT / f"test/db/archos/{os_env}-{arch_env}"
+
+        if not dbg_test_dir.is_dir():
+            return f"ERROR: Directory not found: {dbg_test_dir}"
+
+        dbg_tests = ""
+
+        for entry in sorted(dbg_test_dir.iterdir()):
+            if entry.name.startswith("dbg") and entry.is_file():
+                if len(dbg_tests) >= MAX_TOTAL_CHARS:
+                    break
+                try:
+                    content = entry.read_text()
+                    if len(content) > MAX_CHARS_PER_FILE:
+                        content = content[:MAX_CHARS_PER_FILE] + "\n... (truncated)"
+                    dbg_tests += f"--- {entry.name} ---\n{content}\n\n"
+                except Exception as e:
+                    dbg_tests += f"--- {entry.name} ---\nERROR reading file: {e}\n\n"
+
+    except Exception as e:
+        return f"ERROR: {type(e).__name__}: {e}"
+
+    if len(dbg_tests) > MAX_TOTAL_CHARS:
+        dbg_tests = dbg_tests[:MAX_TOTAL_CHARS] + "\n\n... (total output truncated)"
+
+    return f"Already existing tests:\n{dbg_tests}"   
+        
 @mcp.tool()
 def get_vm_environment() -> str:
     """Return the VM's OS, architecture, compiler, and other environment information used to build and run the test."""
