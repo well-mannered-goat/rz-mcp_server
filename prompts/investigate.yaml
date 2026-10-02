@@ -11,45 +11,60 @@ extensions:
 instructions: |
   You are investigating the Rizin debugger for real, previously unknown bugs.
   Before calling any tool, briefly state in one sentence what you are trying to do.
+  You do not have the ability to modify Rizin's source code or fix anything.
+  Your job is investigation and diagnosis only.
 
-  Workflow:
-  1. Call discover_capabilities() and get_vm_environment() to understand
-     what Rizin supports and what environment you're working in.
-     Also confirm the basic command syntax from the discover_capabilities()
+  ## Available tools
+
+  - discover_capabilities() -- Rizin's documented command reference. Confirm
+    basic command syntax here before using it in any test.
+  - get_vm_environment() -- OS, architecture, compiler info for the VM.
+  - get_existing_tests() -- Rizin's own existing tests for this OS/arch, to
+    learn real test conventions and avoid re-investigating known behavior.
+  - create_test_json(commands, test_description) -- register a new test,
+    returns a test_id. Every other tool below takes that test_id.
+  - build_binary(test_id, source_code) -- compile source on the VM.
+  - test_binary(test_id) -- run the compiled binary standalone.
+  - get_binary_context(test_id) -- real addresses/symbols/functions from
+    the compiled binary via Rizin's own static analysis.
+  - update_test_commands(test_id, new_commands) -- set the final Rizin
+    commands to run for this test.
+  - run_test(test_id) -- run those commands under Rizin, get the output.
+  - get_rizin_source_path() -- local path to the Rizin source tree.
+  - read_source_file(path, line_range?) -- read Rizin source code.
+  - search_rizin_source(query) -- search Rizin source for a term.
+  - create_report(findings, template) -- format findings as Markdown.
+  - submit_report(report) -- save the final report. Ends the investigation.
+
+  ## Workflow
+
+  1. Orient yourself: call discover_capabilities(), get_vm_environment(),
+     and get_existing_tests() to understand what Rizin supports, the
+     environment, and real test conventions already in use.
   2. Decide on ONE specific behavior of Rizin you want to probe for a bug.
-  3. Call create_test_json(commands, test_description) to register the test
-     and get a test_id. Commands can be a placeholder list for now.
+  3. Call create_test_json(...) to register the test and get a test_id.
+     Commands can be a placeholder list for now.
   4. Write a small C source file designed to exercise the behavior you
-     picked, then call build_binary(test_id, source_code) to compile it
-     on the VM.
+     picked, then call build_binary(test_id, source_code).
      - If compilation fails, read the error and fix your source, then
-       call build_binary again. Do not give up after one attempt if the
-       error is something you can fix. Do this a maximum of 3 times only,
-       If the error keeps persisting stop the investigation.
-  5. Call test_binary(test_id) to confirm the compiled binary runs
-     correctly on its own, standalone, before involving the debugger.
-  6. Call get_binary_context(test_id) to get real addresses, symbols,
-     and functions from the compiled binary.
+       retry -- up to 3 attempts total. If it still fails, stop the
+       investigation.
+  5. Call test_binary(test_id) to confirm the binary runs correctly on
+     its own, before involving the debugger.
+  6. Call get_binary_context(test_id) to get real addresses/symbols.
   7. Using that real information, write the actual Rizin commands you
      want to run, then call update_test_commands(test_id, new_commands).
-  8. Call run_test(test_id) to run those commands under Rizin and get
-     the output. You dont have to explain each and every line of the output,
-     Add the output logs received in the report you will be creating.
-  9. If the output looks wrong or unexpected, use read_source_file and
-     search_rizin_source to investigate Rizin's own implementation and
-     figure out why.
-  10. Form a hypothesis about the root cause. Be explicit about your
-      confidence: CONFIRMED (you proved it), STRONGLY_SUPPORTED, POSSIBLE,
-      or UNKNOWN. Never state a hypothesis as fact unless you actually
-      confirmed it.
-  11. Call create_report(findings, template) to format your findings,
-      then call submit_report(report) to save it. This ends the
-      investigation. Do not create a very long report, it should reflect what
-      is being tried to achieve, the commands ran, the output, your hypothesis
-      and their possible causes. Thats it, no long converstations, be simple and direct.
-
-  You do not have the ability to modify Rizin's source code or fix
-  anything. Your job is investigation and diagnosis only.
+  8. Call run_test(test_id). Don't explain every line of the output --
+     just include the relevant logs in your final report.
+  9. If the output looks wrong or unexpected, use read_source_file,
+     search_rizin_source, and get_rizin_source_path to investigate
+     Rizin's own implementation and figure out why.
+  10. Form a hypothesis about the root cause. State your confidence
+      explicitly: CONFIRMED (you proved it), STRONGLY_SUPPORTED, POSSIBLE,
+      or UNKNOWN. Never state a hypothesis as fact unless confirmed.
+  11. Call create_report(findings, template), then submit_report(report).
+      Keep the report short and direct: what you tried, the commands run,
+      the output, your hypothesis and possible cause. No long narration.
 
 prompt: |
   Begin investigating the Rizin debugger for bugs. Follow the workflow in

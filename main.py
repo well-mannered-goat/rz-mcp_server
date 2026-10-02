@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 import socket
+import paramiko
 from pathlib import Path
 
 PROFILE = {
@@ -117,6 +118,23 @@ def run_agent_investigation() -> int:
     )
     return result.returncode
 
+def stop_vm(connection_info: dict) -> bool:
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(
+        hostname=connection_info["host"],
+        port=connection_info["port"],
+        username=connection_info["username"],
+        password=connection_info["password"],
+    )
+
+    try:
+        client.exec_command("sudo poweroff")
+    finally:
+        client.close()
+
+    return True
+
 
 def main() -> None:
     if not ensure_vm_image(PROFILE):
@@ -133,6 +151,8 @@ def main() -> None:
     write_vm_connection_info(connection_info)
 
     exit_code = run_agent_investigation()
+    stop_vm(connection_info)
+    
     if exit_code != 0:
         print(f"Goose exited with a non-zero code: {exit_code}", file=sys.stderr)
         sys.exit(exit_code)
