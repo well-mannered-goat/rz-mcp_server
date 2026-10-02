@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 import json
 import paramiko
+import re
 
 mcp = FastMCP("debugger-triage")
 TEST_ID = 0
@@ -57,6 +58,15 @@ def _resolve_within_source(path: str) -> Path | None:
         return None
 
     return candidate
+
+def _get_test_id() -> int:
+    files = [
+        p for p in TEST_DIR.iterdir()
+        if p.name.startswith("test") and re.search(r"(\d+)$", p.name)
+    ]
+    if not files:
+        return 0
+    return max(int(re.search(r"(\d+)$", p.name).group(1)) for p in files) + 1   
 
 
 @mcp.tool()
@@ -143,10 +153,7 @@ def get_vm_environment() -> str:
 @mcp.tool()
 def create_test_json(commands: list[str], test_description: str) -> int:
     """Create a new stored test with the intended Rizin commands and test description, and return its test ID."""
-    global TEST_ID
-
-    test_id = TEST_ID
-    TEST_ID += 1
+    test_id = _get_test_id()
 
     TESTS_DIR.mkdir(parents=True, exist_ok=True)
 
