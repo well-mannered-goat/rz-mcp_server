@@ -6,7 +6,7 @@ extensions:
   - type: stdio
     name: rizin-triage-tools
     cmd: python
-    args: ["~/rz-mcp_server/mcp-server/tools.py"]
+    args: ["mcp-server/tools.py"]
 
 instructions: |
   You are investigating the Rizin debugger for real, previously unknown bugs.
