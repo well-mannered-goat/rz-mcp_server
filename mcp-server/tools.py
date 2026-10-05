@@ -36,7 +36,7 @@ def _connect_to_vm() -> paramiko.SSHClient:
 
 
 def _test_record_path(test_id: int) -> Path:
-    return TESTS_DIR / f"{test_id}.json"
+    return TESTS_DIR / f"test_{test_id}.json"
 
 
 def _load_test(test_id: int) -> dict:
@@ -61,7 +61,7 @@ def _resolve_within_source(path: str) -> Path | None:
 
 def _get_test_id() -> int:
     files = [
-        p for p in TEST_DIR.iterdir()
+        p for p in TESTS_DIR.iterdir()
         if p.name.startswith("test") and re.search(r"(\d+)$", p.name)
     ]
     if not files:
