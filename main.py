@@ -102,14 +102,26 @@ def write_vm_connection_info(connection_info: dict) -> None:
     print(f"Wrote VM connection info to {VM_CONNECTION_INFO_PATH}.")
 
 
-def run_agent_investigation() -> int:
+def run_agent_investigation(resume: bool) -> int:
     if not RECIPE_PATH.is_file():
         print(f"Recipe not found at {RECIPE_PATH} -- create it before running this.", file=sys.stderr)
         return 1
-
+    if not resume:
+        result = subprocess.run(
+            [
+                "goose", "run",
+                "--recipe", str(RECIPE_PATH),
+                "--max-turns", str(MAX_TURNS),
+                "--max-tool-repetitions", str(MAX_TOOL_REPETITIONS),
+            ],
+            check=False,
+        )
+        return result.returncode
+    
     result = subprocess.run(
         [
             "goose", "run",
+            "--resume",
             "--recipe", str(RECIPE_PATH),
             "--max-turns", str(MAX_TURNS),
             "--max-tool-repetitions", str(MAX_TOOL_REPETITIONS),
@@ -117,48 +129,58 @@ def run_agent_investigation() -> int:
         check=False,
     )
     return result.returncode
+        
 
 def stop_vm(connection_info: dict) -> bool:
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(
-        hostname=connection_info["host"],
-        port=connection_info["port"],
-        username=connection_info["username"],
-        password=connection_info["password"],
-    )
-
     try:
+        client.connect(
+            hostname=connection_info["host"],
+            port=connection_info["port"],
+            username=connection_info["username"],
+            password=connection_info["password"],
+            timeout=10,
+        )
         client.exec_command("sudo poweroff")
+    except Exception as e:
+        print(f"Failed to stop VM: {e}", file=sys.stderr)
+        return False
     finally:
         client.close()
-
     return True
 
 
 def main() -> None:
     if not ensure_vm_image(PROFILE):
         sys.exit(1)
-
     if not start_vm(PROFILE):
         sys.exit(1)
 
     connection_info = get_vm_connection_info(PROFILE)
-
     if not wait_for_vm_ready(connection_info):
+        stop_vm(connection_info)
         sys.exit(1)
 
     write_vm_connection_info(connection_info)
 
-    exit_code = run_agent_investigation()
+    exit_code = 0
+    answer = "n"
+    while True:
+        exit_code = run_agent_investigation(answer == "y")
+        answer = input("Resume the investigation? [y/n]: ").strip().lower()
+        while answer not in ("y", "n"):
+            answer = input("Please only enter y or n: ").strip().lower()
+        if answer != "y":
+            break
+
     stop_vm(connection_info)
-    
+
     if exit_code != 0:
         print(f"Goose exited with a non-zero code: {exit_code}", file=sys.stderr)
         sys.exit(exit_code)
 
     print("Investigation finished. Check reports/ for the output.")
-
 
 if __name__ == "__main__":
     main()

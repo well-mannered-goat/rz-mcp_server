@@ -37,7 +37,7 @@ def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "TESTS_DIR", tmp_path / "tests")
     monkeypatch.setattr(tools, "CAPABILITIES_PATH", tmp_path / "context" / "rizin-debugger-commands")
     monkeypatch.setattr(tools, "VM_CONFIG_PATH", tmp_path / "vm_config.json")
-    monkeypatch.setattr(tools, "REPORT_PATH", tmp_path / "reports" / "report.md")
+    monkeypatch.setattr(tools, "REPORT_PATH_DIR", tmp_path / "reports")
 
     source_root = tmp_path / "rizin"
     source_root.mkdir(parents=True)
@@ -254,10 +254,11 @@ def test_create_report_rejects_template_without_placeholder(sandbox):
 
 
 def test_submit_report_writes_file(sandbox):
-    result = tools.submit_report("# Final Report\nAll good.")
-    assert tools.REPORT_PATH.is_file()
-    assert "Final Report" in tools.REPORT_PATH.read_text()
-    assert str(tools.REPORT_PATH) in result
+    result = tools.submit_report("# Final Report\nAll good.", 0)
+    report_path = tools.REPORT_PATH_DIR / f"report_test_0.md"
+    assert report_path.is_file()
+    assert "Final Report" in report_path.read_text()
+    assert str(report_path) in result
 
 
 # ---------------------------------------------------------------------------

@@ -15,7 +15,7 @@ VM_CONNECTION_INFO_PATH = PROJECT_ROOT / "data" / "vm_connection.json"
 TESTS_DIR = PROJECT_ROOT / "tests"
 CAPABILITIES_PATH = PROJECT_ROOT / "context" / "rizin-debugger-commands"
 VM_CONFIG_PATH = PROJECT_ROOT / "vm_config.json"
-REPORT_PATH = PROJECT_ROOT / "reports" / "report.md"
+REPORT_PATH_DIR = PROJECT_ROOT / "reports"
 ALLOWED_SOURCE_ROOT = Path("~/rizin").expanduser().resolve()
 
 
@@ -354,12 +354,13 @@ def create_report(findings: str, template: str) -> str:
 
 
 @mcp.tool()
-def submit_report(report: str) -> str:
-    """Save the final Markdown report to disk. This is the final tool in the test workflow."""
-    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    REPORT_PATH.write_text(report)
+def submit_report(report: str, test_id: int) -> str:
+    """Save the final Markdown report for the test to disk. This is the final tool in the test workflow."""
+    REPORT_PATH_DIR.mkdir(parents=True, exist_ok=True)
+    report_path = REPORT_PATH_DIR / f"report_test_{test_id}.md"
+    report_path.write_text(report)
 
-    return f"Report saved to {REPORT_PATH}"
+    return f"Report saved to {report_path}"
 
 
 @mcp.tool()
