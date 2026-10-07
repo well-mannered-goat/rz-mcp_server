@@ -60,13 +60,12 @@ def _resolve_within_source(path: str) -> Path | None:
     return candidate
 
 def _get_test_id() -> int:
-    files = [
-        p for p in TESTS_DIR.iterdir()
-        if p.name.startswith("test") and re.search(r"(\d+)$", p.name)
+    ids = [
+        int(m.group(1))
+        for p in TESTS_DIR.iterdir()
+        if (m := re.match(r"test_(\d+)\.json$", p.name))
     ]
-    if not files:
-        return 0
-    return max(int(re.search(r"(\d+)$", p.name).group(1)) for p in files) + 1   
+    return max(ids, default=-1) + 1
 
 
 @mcp.tool()
@@ -153,9 +152,9 @@ def get_vm_environment() -> str:
 @mcp.tool()
 def create_test_json(commands: list[str], test_description: str) -> int:
     """Create a new stored test with the intended Rizin commands and test description, and return its test ID."""
+    TESTS_DIR.mkdir(parents=True, exist_ok=True)
     test_id = _get_test_id()
 
-    TESTS_DIR.mkdir(parents=True, exist_ok=True)
 
     test = {
         "commands": commands,
