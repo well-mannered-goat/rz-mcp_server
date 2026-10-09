@@ -131,18 +131,31 @@ def run_agent_investigation(resume: bool) -> int:
     return result.returncode
         
 
+def vm_is_running() -> bool:
+    result = subprocess.run(
+        ["pgrep", "-f", "qemu-system"],
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode == 0
+
+
 def stop_vm(connection_info: dict) -> bool:
+    if not vm_is_running():
+        print("VM not present, nothing to stop.")
+        return False
+
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
         client.connect(
             hostname=connection_info["host"],
             port=connection_info["port"],
-            username=connection_info["username"],
+            username="root",
             password=connection_info["password"],
             timeout=10,
         )
-        client.exec_command("sudo poweroff")
+        client.exec_command("systemctl poweroff")
     except Exception as e:
         print(f"Failed to stop VM: {e}", file=sys.stderr)
         return False
@@ -166,14 +179,15 @@ def main() -> None:
 
     exit_code = 0
     answer = "n"
-    while True:
-        exit_code = run_agent_investigation(answer == "y")
-        answer = input("Resume the investigation? [y/n]: ").strip().lower()
-        while answer not in ("y", "n"):
-            answer = input("Please only enter y or n: ").strip().lower()
-        if answer != "y":
-            break
+    # while True:
+    #     exit_code = run_agent_investigation(answer == "y")
+    #     answer = input("Resume the investigation? [y/n]: ").strip().lower()
+    #     while answer not in ("y", "n"):
+    #         answer = input("Please only enter y or n: ").strip().lower()
+    #     if answer != "y":
+    #         break
 
+    time.sleep(30)
     stop_vm(connection_info)
 
     if exit_code != 0:
